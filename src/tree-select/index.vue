@@ -26,8 +26,15 @@
         <slot name="dropdownHeader"></slot>
       </div>
       <div class="tree-select-dropdown-area">
-        <div class="dropdown-container">
-          <node v-for="(node, index) in data" :key="node.label+index" :node="node">
+        <div class="dropdown-container" :class="dropconClass">
+          <node
+            v-for="(node, index) in data"
+            :key="node.label+index"
+            :node="node"
+            :selectedMode="selectedMode"
+            :selectedHighlight="selectedHighlight"
+            :selectedIcon="selectedIcon"
+          >
             <template v-slot="scope">
               <slot name="dropdownItem" :node="scope.node"></slot>
             </template>
@@ -56,7 +63,7 @@ export default {
     },
     dropdownWidth: {
       typeof: [String, Number],
-      default: '100%'
+      default: 'auto'
     },
     dropdownHeight: {
       typeof: [String, Number],
@@ -66,13 +73,30 @@ export default {
       typeof: String,
       default: 'input'
     },
-    placeholder: {
-      typeof: String,
-      default: '请选择'
-    },
     selectMode: {
       typeof: String,
       default: 'single'
+    },
+    coverMode: {
+      typeof: String,
+      default: 'scroll'
+    },
+    selectedMode: {
+      typeof: String,
+      default: 'icon'
+    },
+    selectedIcon: {
+      typeof: Object,
+      default: () => ICONLIST.selectedIcon
+    },
+    selectedHighlight: {
+      typeof: Boolean,
+      default: true
+    },
+    // todo readme
+    placeholder: {
+      typeof: String,
+      default: '请选择'
     },
     disabled: {
       typeof: Boolean,
@@ -122,6 +146,12 @@ export default {
       const style = { width, height, opacity, 'border-width': borderWidth }
       this.displayMode === 'text' && (style['min-width'] = '220px')
       return style
+    },
+    dropconClass () {
+      return {
+        rest: this.coverMode === 'rest',
+        scroll: this.coverMode === 'scroll'
+      }
     }
   },
   methods: {
@@ -231,6 +261,7 @@ export default {
     position: absolute;
     display: flex;
     flex-direction: column;
+    min-width: 100%;
     padding: 10px;
     bottom: -10px;
     border-style: solid;
@@ -255,8 +286,20 @@ export default {
     }
 
     .dropdown-container {
-      float: left;
       min-width: 100%;
+
+      &.rest {
+        width: 100%;
+
+        .dropdown-node /deep/ .dropdown-node-item .dropdown-node-item-label {
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+
+      &.scroll {
+        float: left;
+      }
     }
   }
 }

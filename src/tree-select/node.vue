@@ -2,7 +2,12 @@
   <div class="dropdown-node">
     <div class="dropdown-node-item" :style="itemStyle">
       <slot :node="node">
-        <div>{{node.label}}</div>
+        <span class="dropdown-node-item-label" :class="{ selected: node.selected }">{{node.label}}</span>
+        <span v-if="!node.childs && selectedMode==='icon'" class="dropdown-node-item-seleicon">
+          <svg v-if="node.selected" :viewBox="selectedIcon.viewBox">
+            <path :d="selectedIcon.path"></path>
+          </svg>
+        </span>
       </slot>
     </div>
     <div v-if="node.childs && node.childs.length">
@@ -16,6 +21,8 @@
 </template>
 
 <script>
+import ICONLIST from '../dist/iconlist.js'
+
 export default {
   name: 'node',
   props: {
@@ -26,6 +33,18 @@ export default {
     paddingLeft: {
       typeof: Number,
       default: 10
+    },
+    selectedMode: {
+      typeof: String,
+      default: 'icon'
+    },
+    selectedIcon: {
+      typeof: Object,
+      default: () => ICONLIST.selectedIcon
+    },
+    selectedHighlight: {
+      typeof: Boolean,
+      default: true
     }
   },
   computed: {
@@ -39,6 +58,8 @@ export default {
 <style lang="less" scoped>
 .dropdown-node {
   &-item {
+    display: flex;
+    align-items: center;
     padding-top: 5px;
     padding-bottom: 5px;
     padding-right: 10px;
@@ -48,6 +69,23 @@ export default {
 
     &:hover {
       background-color: #f5f7fa;
+    }
+
+    &-label {
+      flex-grow: 1;
+    }
+    &-label.selected {
+      color: #409eff;
+    }
+
+    &-seleicon {
+      width: 14px;
+      height: 14px;
+      margin-left: 5px;
+
+      svg path {
+        fill: #409eff;
+      }
     }
   }
 }

@@ -25,7 +25,7 @@ export default {
           childs: [
             { label: '测试子选项4-1', value: 10041 },
             { label: '测试子选项4-2', value: 10042 },
-            { label: '测试子选项4-3', value: 10043 },
+            { label: '测试子选项4-3', value: 10043, selected: true },
             { label: '测试子选项4-4', value: 10044 }
           ]
         },
@@ -39,7 +39,7 @@ export default {
               label: '测试子选项8-2',
               value: 10082,
               childs: [
-                { label: '测试子选项8-2-1测试子选项8-2-1测试子选项8-2-1', value: 100821 },
+                { label: '测试子选项8-2-1', value: 100821 },
                 { label: '测试子选项8-2-2', value: 100822 }
               ]
             }
