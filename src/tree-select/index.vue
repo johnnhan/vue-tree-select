@@ -29,11 +29,10 @@
         <div class="dropdown-container" :class="dropconClass">
           <node
             v-for="(node, index) in data"
-            :key="node.label+index"
+            :key="getLabel(node)+index"
             :node="node"
-            :selectedMode="selectedMode"
-            :selectedHighlight="selectedHighlight"
-            :selectedIcon="selectedIcon"
+            :props="props"
+            v-bind="$attrs"
           >
             <template v-slot="scope">
               <slot name="dropdownItem" :node="scope.node"></slot>
@@ -57,6 +56,18 @@ export default {
     node
   },
   props: {
+    data: {
+      typeof: Array,
+      default: () => []
+    },
+    props: {
+      typeof: Object,
+      default: () => ({})
+    },
+    disabled: {
+      typeof: Boolean,
+      default: false
+    },
     width: {
       typeof: [String, Number],
       default: 220
@@ -67,7 +78,7 @@ export default {
     },
     dropdownHeight: {
       typeof: [String, Number],
-      default: 220
+      default: 'auto'
     },
     displayMode: {
       typeof: String,
@@ -81,34 +92,13 @@ export default {
       typeof: String,
       default: 'scroll'
     },
-    selectedMode: {
-      typeof: String,
-      default: 'icon'
-    },
-    selectedIcon: {
-      typeof: Object,
-      default: () => ICONLIST.selectedIcon
-    },
-    selectedHighlight: {
-      typeof: Boolean,
-      default: true
-    },
-    // todo readme
     placeholder: {
       typeof: String,
       default: '请选择'
     },
-    disabled: {
-      typeof: Boolean,
-      default: false
-    },
     arrowIcon: {
       typeof: Object,
       default: () => ICONLIST.arrow
-    },
-    data: {
-      typeof: Array,
-      default: () => []
     }
   },
   data () {
@@ -140,11 +130,13 @@ export default {
     },
     dropdownStyle () {
       const width = typeof this.dropdownWidth === 'number' ? this.dropdownWidth + 'px' : this.dropdownWidth
-      const height = this.isFocus ? this.dropdownHeight + 'px' : 0
+      const height = this.isFocus ? typeof this.dropdownHeight === 'number' ? this.dropdownHeight + 'px' : this.dropdownHeight : 0
       const opacity = this.isFocus ? 1 : 0
       const borderWidth = this.isFocus ? '1px' : 0
-      const style = { width, height, opacity, 'border-width': borderWidth }
+      const padding = this.isFocus ? '15px 15px' : '0 15px'
+      const style = { width, height, opacity, padding, 'border-width': borderWidth }
       this.displayMode === 'text' && (style['min-width'] = '220px')
+      this.dropdownHeight === 'auto' && (style['max-height'] = '220px')
       return style
     },
     dropconClass () {
@@ -155,6 +147,11 @@ export default {
     }
   },
   methods: {
+    getLabel (node) {
+      return typeof this.props.label === 'function'
+        ? this.props.label(node)
+        : this.props.label ? node[this.props.label] : node.label
+    },
     toggle () {
       if (this.disabled) return
       this.isFocus = !this.isFocus
@@ -267,7 +264,7 @@ export default {
     border-style: solid;
     border-color: #e4e7ed;
     box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
-    transition: height 0.3s, opacity 0.3s, border-width 0.3s;
+    transition: height 0.3s, opacity 0.3s, border-width 0.3s, padding 0.3s;
     transform: translateY(100%);
 
     &-area {

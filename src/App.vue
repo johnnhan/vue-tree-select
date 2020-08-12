@@ -2,6 +2,7 @@
   <div id="app">
     <tree-select
       :data="data"
+      :props="props"
     >
     </tree-select>
   </div>
@@ -24,7 +25,7 @@ export default {
           value: 1004,
           childs: [
             { label: '测试子选项4-1', value: 10041 },
-            { label: '测试子选项4-2', value: 10042 },
+            { label: '测试子选项4-2', value: 10042, disable: true },
             { label: '测试子选项4-3', value: 10043, selected: true },
             { label: '测试子选项4-4', value: 10044 }
           ]
@@ -46,7 +47,10 @@ export default {
           ]
         },
         { label: '测试选项9', value: 1009 }
-      ]
+      ],
+      props: {
+        disabled: 'disable'
+      }
     }
   }
 }
