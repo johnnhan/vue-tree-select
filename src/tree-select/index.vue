@@ -116,7 +116,7 @@ export default {
   },
   computed: {
     containerStyle () {
-      const width = typeof this.width === 'number' ? this.width + 'px' : this.width
+      const width = this.getStyleValue(this.width)
       return this.displayMode === 'input' ? { width } : {}
     },
     displayClass () {
@@ -131,17 +131,20 @@ export default {
       return this.disabled ? '#c0c4cc' : this.displayMode === 'input' ? '#c0c4cc' : '#409eff'
     },
     dropDownStyle () {
-      const height = typeof this.dropdownHeight === 'number' ? this.dropdownHeight + 'px' : this.dropdownHeight
       const transition = `${this.dropdownHeight === 'auto' ? 'max-height' : 'height'} 0.2s linear`
+      const width = this.getStyleValue(this.dropdownWidth)
       const minWidth = this.displayMode === 'text' ? '220px' : '100%'
-      const style = { height, transition, 'min-width': minWidth }
-      this.dropdownHeight === 'auto' && (style['max-height'] = this.isFocus ? '220px' : 0)
+      const style = { width, transition, 'min-width': minWidth }
+      if (this.dropdownHeight === 'auto') {
+        style['max-height'] = this.isFocus ? '220px' : 0
+      } else {
+        style.height = this.isFocus ? this.getStyleValue(this.dropdownHeight) : 0
+      }
       return style
     },
     dropWrapStyle () {
-      const width = typeof this.dropdownWidth === 'number' ? this.dropdownWidth + 'px' : this.dropdownWidth
-      const height = typeof this.dropdownHeight === 'number' ? this.dropdownHeight + 'px' : this.dropdownHeight
-      const style = { width, height }
+      const height = this.getStyleValue(this.dropdownHeight)
+      const style = { height }
       this.dropdownHeight === 'auto' && (style['max-height'] = '220px')
       return style
     },
@@ -162,6 +165,9 @@ export default {
       if (this.disabled) return
       this.isFocus = !this.isFocus
       this.isFocus && this.$refs.input && this.$refs.input.focus()
+    },
+    getStyleValue (v) {
+      return typeof v === 'number' ? v + 'px' : v
     }
   }
 }
@@ -268,6 +274,7 @@ export default {
     box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
 
     &-wrap {
+      width: 100%;
       display: flex;
       flex-direction: column;
       padding: 15px;
