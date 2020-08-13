@@ -21,27 +21,29 @@
         </svg>
       </slot>
     </div>
-    <div class="tree-select-dropdown" :style="dropdownStyle" @click.stop>
-      <div>
-        <slot name="dropdownHeader"></slot>
-      </div>
-      <div class="tree-select-dropdown-area">
-        <div class="dropdown-container" :class="dropconClass">
-          <node
-            v-for="(node, index) in data"
-            :key="getLabel(node)+index"
-            :node="node"
-            :props="props"
-            v-bind="$attrs"
-          >
-            <template v-slot="scope">
-              <slot name="dropdownItem" :node="scope.node"></slot>
-            </template>
-          </node>
+    <div class="tree-select-dropdown" :style="dropDownStyle" @click.stop>
+      <div class="tree-select-dropdown-wrap" :style="dropWrapStyle">
+        <div>
+          <slot name="dropdownHeader"></slot>
         </div>
-      </div>
-      <div>
-        <slot name="dropdownFooter"></slot>
+        <div class="tree-select-dropdown-area">
+          <div class="dropdown-container" :class="dropconClass">
+            <node
+              v-for="(node, index) in data"
+              :key="getLabel(node)+index"
+              :node="node"
+              :props="props"
+              v-bind="$attrs"
+            >
+              <template v-slot="scope">
+                <slot name="dropdownItem" :node="scope.node"></slot>
+              </template>
+            </node>
+          </div>
+        </div>
+        <div>
+          <slot name="dropdownFooter"></slot>
+        </div>
       </div>
     </div>
   </div>
@@ -128,14 +130,18 @@ export default {
     arrowFill () {
       return this.disabled ? '#c0c4cc' : this.displayMode === 'input' ? '#c0c4cc' : '#409eff'
     },
-    dropdownStyle () {
+    dropDownStyle () {
+      const height = typeof this.dropdownHeight === 'number' ? this.dropdownHeight + 'px' : this.dropdownHeight
+      const transition = `${this.dropdownHeight === 'auto' ? 'max-height' : 'height'} 0.2s linear`
+      const minWidth = this.displayMode === 'text' ? '220px' : '100%'
+      const style = { height, transition, 'min-width': minWidth }
+      this.dropdownHeight === 'auto' && (style['max-height'] = this.isFocus ? '220px' : 0)
+      return style
+    },
+    dropWrapStyle () {
       const width = typeof this.dropdownWidth === 'number' ? this.dropdownWidth + 'px' : this.dropdownWidth
-      const height = this.isFocus ? typeof this.dropdownHeight === 'number' ? this.dropdownHeight + 'px' : this.dropdownHeight : 0
-      const opacity = this.isFocus ? 1 : 0
-      const borderWidth = this.isFocus ? '1px' : 0
-      const padding = this.isFocus ? '15px 15px' : '0 15px'
-      const style = { width, height, opacity, padding, 'border-width': borderWidth }
-      this.displayMode === 'text' && (style['min-width'] = '220px')
+      const height = typeof this.dropdownHeight === 'number' ? this.dropdownHeight + 'px' : this.dropdownHeight
+      const style = { width, height }
       this.dropdownHeight === 'auto' && (style['max-height'] = '220px')
       return style
     },
@@ -179,7 +185,7 @@ export default {
       width: 14px;
       height: 14px;
       margin-left: 10px;
-      transition: transform 0.3s;
+      transition: transform 0.2s linear;
     }
 
     &.focus {
@@ -256,16 +262,18 @@ export default {
 
   &-dropdown {
     position: absolute;
-    display: flex;
-    flex-direction: column;
-    min-width: 100%;
-    padding: 10px;
     bottom: -10px;
-    border-style: solid;
-    border-color: #e4e7ed;
-    box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
-    transition: height 0.3s, opacity 0.3s, border-width 0.3s, padding 0.3s;
     transform: translateY(100%);
+    overflow: hidden;
+    box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+
+    &-wrap {
+      display: flex;
+      flex-direction: column;
+      padding: 15px;
+      border: 1px solid #e4e7ed;
+      border-radius: 4px;
+    }
 
     &-area {
       overflow: auto;
