@@ -32,7 +32,6 @@
               v-for="(node, index) in data"
               :key="getLabel(node)+index"
               :node="node"
-              :props="props"
               v-bind="$attrs"
             >
               <template v-slot="scope">
@@ -51,6 +50,7 @@
 
 <script>
 import ICONLIST from '../dist/iconlist.js'
+import store from '../dist/store.js'
 import node from './node.vue'
 
 export default {
@@ -62,7 +62,7 @@ export default {
       typeof: Array,
       default: () => []
     },
-    props: {
+    options: {
       typeof: Object,
       default: () => ({})
     },
@@ -90,6 +90,18 @@ export default {
       typeof: String,
       default: 'single'
     },
+    selectedMode: {
+      typeof: String,
+      default: 'icon'
+    },
+    selectedIcon: {
+      typeof: Object,
+      default: () => ICONLIST.selectedIcon
+    },
+    selectedHighlight: {
+      typeof: Boolean,
+      default: true
+    },
     coverMode: {
       typeof: String,
       default: 'scroll'
@@ -110,6 +122,7 @@ export default {
     }
   },
   created () {
+    this.propsInit()
     document.addEventListener('click', () => {
       this.isFocus && (this.isFocus = false)
     })
@@ -156,15 +169,21 @@ export default {
     }
   },
   methods: {
-    getLabel (node) {
-      return typeof this.props.label === 'function'
-        ? this.props.label(node)
-        : this.props.label ? node[this.props.label] : node.label
+    propsInit () {
+      store.setValue('options', this.options)
+      store.setValue('selectedMode', this.selectedMode)
+      store.setValue('selectedIcon', this.selectedIcon)
+      store.setValue('selectedHighlight', this.selectedHighlight)
     },
     toggle () {
       if (this.disabled) return
       this.isFocus = !this.isFocus
       this.isFocus && this.$refs.input && this.$refs.input.focus()
+    },
+    getLabel (node) {
+      return typeof this.options.label === 'function'
+        ? this.options.label(node)
+        : this.options.label ? node[this.options.label] : node.label
     },
     getStyleValue (v) {
       return typeof v === 'number' ? v + 'px' : v

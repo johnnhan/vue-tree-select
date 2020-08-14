@@ -28,8 +28,8 @@ export default {
           value: 1004,
           childs: [
             { label: '测试子选项4-1测试子选项4-1测试子选项4-1', value: 10041 },
-            { label: '测试子选项4-2', value: 10042, disable: true },
-            { label: '测试子选项4-3', value: 10043, selected: true },
+            { label: '测试子选项4-2', value: 10042 },
+            { label: '测试子选项4-3', value: 10043 },
             { label: '测试子选项4-4', value: 10044 }
           ]
         },

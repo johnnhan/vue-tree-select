@@ -27,6 +27,7 @@
 | ---- | ---- | ---- |
 | label | String \| Function(node) | 指定下拉列表要展示的文本的字段 |
 | children | String | 指定树的子节点的字段 |
+| selected | String | 下拉列表选中选项的参考字段 |
 | disabled | String \| Function(node) | 下拉列表禁用选项的参考字段 |
 
 举例说明（默认值）：
