@@ -100,7 +100,7 @@ export default {
     },
     arrowIcon: {
       typeof: Object,
-      default: () => ICONLIST.arrow
+      default: () => ICONLIST.arrow_up
     }
   },
   data () {
@@ -110,11 +110,15 @@ export default {
     }
   },
   created () {
+    this.dataFormat(this.data)
     document.addEventListener('click', () => {
       this.isFocus && (this.isFocus = false)
     })
   },
   computed: {
+    children () {
+      return this.props.children || 'children'
+    },
     containerStyle () {
       const width = this.getStyleValue(this.width)
       return this.displayMode === 'input' ? { width } : {}
@@ -156,6 +160,14 @@ export default {
     }
   },
   methods: {
+    dataFormat (data, parent) {
+      for (const item of data) {
+        item.parent = parent || null
+        if (item[this.children] && item[this.children].length) {
+          this.dataFormat(item[this.children], data)
+        }
+      }
+    },
     getLabel (node) {
       return typeof this.props.label === 'function'
         ? this.props.label(node)

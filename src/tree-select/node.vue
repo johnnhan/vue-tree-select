@@ -2,15 +2,24 @@
   <div class="dropdown-node">
     <div class="dropdown-node-item" :style="itemStyle">
       <slot :node="node">
+        <svg
+          v-if="node.childs && node.childs.length"
+          :viewBox="selectedIcon.viewBox"
+          class="dropdown-node-item-arrowicon"
+        >
+          <path :d="selectedIcon.path"></path>
+        </svg>
         <span
           class="dropdown-node-item-label"
           :class="{ selected: node.selected, disabled: getDisabled(node) }"
         >{{getLabel(node)}}</span>
-        <span v-if="!node.childs && selectedMode==='icon'" class="dropdown-node-item-seleicon">
-          <svg v-if="node.selected" :viewBox="selectedIcon.viewBox">
-            <path :d="selectedIcon.path"></path>
-          </svg>
-        </span>
+        <svg
+          v-if="selectedMode==='icon' && node.selected"
+          :viewBox="selectedIcon.viewBox"
+          class="dropdown-node-item-seleicon"
+        >
+          <path :d="selectedIcon.path"></path>
+        </svg>
       </slot>
     </div>
     <div v-if="node.childs && node.childs.length">
@@ -108,12 +117,22 @@ export default {
       color: #ccc;
     }
 
+    &-arrowicon {
+      width: 14px;
+      height: 14px;
+      margin-left: 5px;
+
+      & path {
+        fill: #606266;
+      }
+    }
+
     &-seleicon {
       width: 14px;
       height: 14px;
       margin-left: 5px;
 
-      svg path {
+      & path {
         fill: #409eff;
       }
     }
