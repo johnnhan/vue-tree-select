@@ -7,7 +7,8 @@
 | disabled | Boolean | false | 是否禁用组件 |
 | width | String \| Number | 220 | 组件的宽 |
 | dropdownWidth | String \| Number | 'auto' | dropdwon（下拉框）的宽 |
-| dropdownHeight | String \| Number | 220 | dropdwon（下拉框）的高 |
+| dropdownMaxWidth | String \| Number | 440 | dropdwon（下拉框）的最大宽 |
+| dropdownMaxHeight | String \| Number | 220 | dropdwon（下拉框）的最大高 |
 | displayMode | String | 'input' | 组件呈现模式，'input'（输入框模式），'text'（文本模式） |
 | selectMode | String | 'single' | 选择模式，'single'（单选模式），'multiple'（多选模式）|
 | coverMode | String | 'scroll' | 某一选项文本过长时 dropdown 的表现形式，'scroll'（显示滚动条），'rest'（显示省略号） |

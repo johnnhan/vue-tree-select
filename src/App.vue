@@ -3,7 +3,6 @@
     <tree-select
       :data="data"
       :props="props"
-      dropdownHeight="320px"
       dropdownWidth="100%"
       coverMode="rest"
     >
@@ -26,7 +25,7 @@ export default {
         {
           label: '测试选项4',
           value: 1004,
-          childs: [
+          children: [
             { label: '测试子选项4-1测试子选项4-1测试子选项4-1', value: 10041 },
             { label: '测试子选项4-2', value: 10042 },
             { label: '测试子选项4-3', value: 10043 },
@@ -37,12 +36,12 @@ export default {
         {
           label: '测试选项8',
           value: 1008,
-          childs: [
+          children: [
             { label: '测试子选项8-1', value: 10081 },
             {
               label: '测试子选项8-2',
               value: 10082,
-              childs: [
+              children: [
                 { label: '测试子选项8-2-1', value: 100821 },
                 { label: '测试子选项8-2-2', value: 100822 }
               ]

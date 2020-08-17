@@ -11,14 +11,11 @@
           :disabled="disabled"
         >
         <span v-else class="tree-select-display-text">{{ displayValue || placeholder }}</span>
-        <svg class="tree-select-display-arrow" :viewBox="arrowIcon.viewBox">
-          <template v-if="Array.isArray(arrowIcon.path)">
-            <path v-for="(v, k) in path" :key="k" :d="v" :fill="arrowFill"></path>
-          </template>
-          <template v-else>
-            <path :d="arrowIcon.path" :fill="arrowFill"></path>
-          </template>
-        </svg>
+        <svg-icon
+          class="tree-select-display-arrowicon"
+          :icon="arrowUpIcon"
+          :color="arrowFill"
+        ></svg-icon>
       </slot>
     </div>
     <div class="tree-select-dropdown" :style="dropDownStyle" @click.stop>
@@ -52,10 +49,12 @@
 import ICONLIST from '../dist/iconlist.js'
 import store from '../dist/store.js'
 import node from './node.vue'
+import svgIcon from './svgIcon.vue'
 
 export default {
   components: {
-    node
+    node,
+    svgIcon
   },
   props: {
     data: {
@@ -78,9 +77,13 @@ export default {
       typeof: [String, Number],
       default: 'auto'
     },
-    dropdownHeight: {
+    dropdownMaxWidth: {
       typeof: [String, Number],
-      default: 'auto'
+      default: 440
+    },
+    dropdownMaxHeight: {
+      typeof: [String, Number],
+      default: 220
     },
     displayMode: {
       typeof: String,
@@ -110,9 +113,13 @@ export default {
       typeof: String,
       default: '请选择'
     },
-    arrowIcon: {
+    arrowUpIcon: {
       typeof: Object,
-      default: () => ICONLIST.arrow
+      default: () => ICONLIST.arrow_up
+    },
+    arrowRightIcon: {
+      typeof: Object,
+      default: () => ICONLIST.arrow_right
     }
   },
   data () {
@@ -123,11 +130,15 @@ export default {
   },
   created () {
     this.propsInit()
+    this.dataFormat(this.data)
     document.addEventListener('click', () => {
       this.isFocus && (this.isFocus = false)
     })
   },
   computed: {
+    children () {
+      return this.options.children || 'children'
+    },
     containerStyle () {
       const width = this.getStyleValue(this.width)
       return this.displayMode === 'input' ? { width } : {}
@@ -144,21 +155,18 @@ export default {
       return this.disabled ? '#c0c4cc' : this.displayMode === 'input' ? '#c0c4cc' : '#409eff'
     },
     dropDownStyle () {
-      const transition = `${this.dropdownHeight === 'auto' ? 'max-height' : 'height'} 0.2s linear`
+      const transition = 'max-height 0.2s linear, opacity 0.2s linear'
       const width = this.getStyleValue(this.dropdownWidth)
+      const opacity = this.isFocus ? 1 : 0
       const minWidth = this.displayMode === 'text' ? '220px' : '100%'
-      const style = { width, transition, 'min-width': minWidth }
-      if (this.dropdownHeight === 'auto') {
-        style['max-height'] = this.isFocus ? '220px' : 0
-      } else {
-        style.height = this.isFocus ? this.getStyleValue(this.dropdownHeight) : 0
-      }
+      const maxWidth = this.getStyleValue(this.dropdownMaxWidth)
+      const maxHeight = this.isFocus ? this.getStyleValue(this.dropdownMaxHeight) : 0
+      const style = { width, transition, opacity, 'max-width': maxWidth, 'max-height': maxHeight, 'min-width': minWidth }
       return style
     },
     dropWrapStyle () {
-      const height = this.getStyleValue(this.dropdownHeight)
-      const style = { height }
-      this.dropdownHeight === 'auto' && (style['max-height'] = '220px')
+      const maxHeight = this.getStyleValue(this.dropdownMaxHeight)
+      const style = { 'max-height': maxHeight }
       return style
     },
     dropconClass () {
@@ -174,6 +182,15 @@ export default {
       store.setValue('selectedMode', this.selectedMode)
       store.setValue('selectedIcon', this.selectedIcon)
       store.setValue('selectedHighlight', this.selectedHighlight)
+      store.setValue('arrowRightIcon', this.arrowRightIcon)
+    },
+    dataFormat (data, parent) {
+      for (const item of data) {
+        item.parent = parent || null
+        if (item[this.children] && item[this.children].length) {
+          this.dataFormat(item[this.children], data)
+        }
+      }
     },
     toggle () {
       if (this.disabled) return
@@ -205,7 +222,7 @@ export default {
     height: 40px;
     cursor: pointer;
 
-    &-arrow {
+    &-arrowicon {
       flex-shrink: 0;
       width: 14px;
       height: 14px;
@@ -214,7 +231,7 @@ export default {
     }
 
     &.focus {
-      .tree-select-display-arrow {
+      .tree-select-display-arrowicon {
         transform: rotate(-180deg);
       }
     }
@@ -294,6 +311,7 @@ export default {
 
     &-wrap {
       width: 100%;
+      height: auto;
       display: flex;
       flex-direction: column;
       padding: 15px;

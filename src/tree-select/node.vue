@@ -2,19 +2,29 @@
   <div class="dropdown-node">
     <div class="dropdown-node-item" :style="itemStyle" @click.stop="itemClick(node)">
       <slot :node="node">
+        <span class="dropdown-node-item-pre">
+          <svg-icon
+            v-if="node[this.children] && node[this.children].length"
+            :icon="arrowRightIcon"
+            class="dropdown-node-item-arrowicon"
+          ></svg-icon>
+        </span>
         <span
           class="dropdown-node-item-label"
           :class="{ selected: node[selected], highlight: selectedHighlight, disabled: getDisabled(node) }"
         >{{getLabel(node)}}</span>
-        <span v-if="!node.childs && selectedMode==='icon'" class="dropdown-node-item-seleicon">
-          <svg v-if="node[selected]" :viewBox="selectedIcon.viewBox">
-            <path :d="selectedIcon.path"></path>
-          </svg>
+        <span v-if="selectedMode==='icon'" class="dropdown-node-item-after">
+          <svg-icon
+            v-if="node.selected"
+            :icon="selectedIcon"
+            color="#409eff"
+            class="dropdown-node-item-seleicon"
+          ></svg-icon>
         </span>
       </slot>
     </div>
-    <div v-if="node.childs && node.childs.length">
-      <node v-for="(item, index) in node.childs" :key="getLabel(item)+index" :node="item" :paddingLeft="paddingLeft+15" >
+    <div v-if="node[this.children] && node[this.children].length">
+      <node v-for="(item, index) in node[this.children]" :key="getLabel(item)+index" :node="item" :paddingLeft="paddingLeft+15" >
         <template v-slot="scope">
           <slot :node="scope.node"></slot>
         </template>
@@ -25,9 +35,11 @@
 
 <script>
 import store from '../dist/store.js'
+import svgIcon from './svgIcon.vue'
 
 export default {
   name: 'node',
+  components: { svgIcon },
   props: {
     node: {
       typeof: Object,
@@ -42,7 +54,8 @@ export default {
     return {
       selectedMode: store.getValue('selectedMode'),
       selectedIcon: store.getValue('selectedIcon'),
-      selectedHighlight: store.getValue('selectedHighlight')
+      selectedHighlight: store.getValue('selectedHighlight'),
+      arrowRightIcon: store.getValue('arrowRightIcon')
     }
   },
   computed: {
@@ -72,6 +85,7 @@ export default {
         : options.disabled ? node[options.disabled] : node.disabled
     },
     itemClick (node) {
+      console.log(node)
       const preNode = store.getValue('preSelectedNode')
       if (this.getDisabled(node) || node[this.selected]) {
         return false
@@ -92,6 +106,7 @@ export default {
 .dropdown-node {
   &-item {
     display: flex;
+    align-items: center;
     align-items: center;
     padding-top: 5px;
     padding-bottom: 5px;
@@ -117,14 +132,20 @@ export default {
       cursor: default;
     }
 
-    &-seleicon {
+    &-pre, &-after {
+      display: inline-block;
+      flex-shrink: 0;
       width: 14px;
       height: 14px;
-      margin-left: 5px;
+      font-size: 0;
+    }
 
-      svg path {
-        fill: #409eff;
-      }
+    &-pre {
+      margin-right: 2px;
+    }
+
+    &-after {
+      margin-left: 5px;
     }
   }
 }
