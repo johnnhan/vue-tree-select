@@ -24,7 +24,7 @@
       </slot>
     </div>
     <div v-if="node[this.children] && node[this.children].length">
-      <node v-for="(item, index) in node[this.children]" :key="getLabel(item)+index" :node="item" :paddingLeft="paddingLeft+15" >
+      <node v-for="(item, index) in node[this.children]" :key="getLabel(item)+index" :node="item" :paddingLeft="paddingLeft+14" >
         <template v-slot="scope">
           <slot :node="scope.node"></slot>
         </template>
