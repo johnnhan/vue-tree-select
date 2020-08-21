@@ -1,21 +1,23 @@
 <template>
   <div class="dropdown-node">
-    <div class="dropdown-node-item" :style="itemStyle" @click.stop="itemClick(node)">
+    <div class="dropdown-node-item" :style="itemStyle" @click.stop="itemClick">
       <slot :node="node">
         <span class="dropdown-node-item-pre">
           <svg-icon
             v-if="node[this.children] && node[this.children].length"
             :icon="arrowRightIcon"
             class="dropdown-node-item-arrowicon"
+            :class="{ collapse: node[this.collapse] }"
+            @click="toggleCollapse"
           ></svg-icon>
         </span>
         <span
           class="dropdown-node-item-label"
-          :class="{ selected: node[selected], highlight: selectedHighlight, disabled: getDisabled(node) }"
+          :class="{ selected: node[this.selected], 'selected-highlight': selectedHighlight, disabled: getDisabled(node) }"
         >{{getLabel(node)}}</span>
         <span v-if="selectedMode==='icon'" class="dropdown-node-item-after">
           <svg-icon
-            v-if="node.selected"
+            v-if="node[this.selected]"
             :icon="selectedIcon"
             color="#409eff"
             class="dropdown-node-item-seleicon"
@@ -23,8 +25,8 @@
         </span>
       </slot>
     </div>
-    <div v-if="node[this.children] && node[this.children].length">
-      <node v-for="(item, index) in node[this.children]" :key="getLabel(item)+index" :node="item" :paddingLeft="paddingLeft+14" >
+    <div v-if="node[this.children] && node[this.children].length" class="dropdown-node-childs" ref="childsRef">
+      <node v-for="(item, index) in node[this.children]" :key="getLabel(item)+index" :node="item" :paddingLeft="paddingLeft+14" v-on="$listeners">
         <template v-slot="scope">
           <slot :node="scope.node"></slot>
         </template>
@@ -69,6 +71,10 @@ export default {
     children () {
       const options = store.getValue('options')
       return options.children || 'children'
+    },
+    collapse () {
+      const options = store.getValue('options')
+      return options.collapse || 'collapse'
     }
   },
   methods: {
@@ -84,69 +90,13 @@ export default {
         ? options.disabled(node)
         : options.disabled ? node[options.disabled] : node.disabled
     },
-    itemClick (node) {
-      console.log(node)
-      const preNode = store.getValue('preSelectedNode')
-      if (this.getDisabled(node) || node[this.selected]) {
-        return false
-      }
-      if (this.selectMode === 'multiple') {
-        // todo
-      } else {
-        preNode && (preNode[this.selected] = false)
-        this.$set(node, this.selected, true)
-        store.setValue('preSelectedNode', node)
-      }
+    itemClick () {
+      this.$emit('select', this.node)
+    },
+    toggleCollapse () {
+      this.$set(this.node, this.collapse, !this.node[this.collapse])
+      this.$refs.childsRef.style.display = this.node[this.collapse] ? 'none' : 'block'
     }
   }
 }
 </script>
-
-<style lang="less" scoped>
-.dropdown-node {
-  &-item {
-    display: flex;
-    align-items: center;
-    align-items: center;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    padding-right: 10px;
-    color: #606266;
-    white-space: nowrap;
-    cursor: pointer;
-
-    &:hover {
-      background-color: #f5f7fa;
-    }
-
-    &-label {
-      flex-grow: 1;
-    }
-
-    &-label.selected.highlight {
-      color: #409eff;
-    }
-
-    &-label.disabled {
-      color: #ccc;
-      cursor: default;
-    }
-
-    &-pre, &-after {
-      display: inline-block;
-      flex-shrink: 0;
-      width: 14px;
-      height: 14px;
-      font-size: 0;
-    }
-
-    &-pre {
-      margin-right: 2px;
-    }
-
-    &-after {
-      margin-left: 5px;
-    }
-  }
-}
-</style>

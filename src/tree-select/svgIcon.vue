@@ -1,5 +1,5 @@
 <template>
-  <svg :viewBox="icon.viewBox" class="svg-icon">
+  <svg :viewBox="icon.viewBox" class="svg-icon" @click.stop="$emit('click')">
     <template v-if="Array.isArray(icon.path)">
       <path v-for="(v, k) in icon.path" :key="'icon'+k" :d="v" :fill="color"></path>
     </template>
@@ -20,7 +20,7 @@ export default {
     },
     color: {
       type: String,
-      default: '#606266'
+      default: '#c0c4cc'
     }
   }
 }
