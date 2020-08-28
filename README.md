@@ -3,7 +3,7 @@
 | 属性 | 类型 | 默认值 | 描述 |
 | ---- | ---- | ---- | ---- |
 | data | Array | [] | 下拉列表的数据 |
-| props | Object | [附录一](#附录一（自定义节点属性的数据格式）) | 自定义节点属性 |
+| options | Object | [附录一](#附录一（自定义节点属性的数据格式）) | 自定义节点属性 |
 | size | String | 'medium' | 组件尺寸，'medium'（标准），'small'（小） |
 | disabled | Boolean | false | 是否禁用组件 |
 | width | String \| Number | 220 | 组件的宽 |

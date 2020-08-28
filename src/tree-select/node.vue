@@ -1,32 +1,45 @@
 <template>
   <div class="dropdown-node">
     <div class="dropdown-node-item" :style="itemStyle" @click.stop="itemClick">
-      <slot :node="node">
-        <span class="dropdown-node-item-pre">
-          <svg-icon
-            v-if="node[this.children] && node[this.children].length"
-            :icon="arrowRightIcon"
-            class="dropdown-node-item-arrowicon"
-            :class="{ collapse: node[this.collapse] }"
-            @click="toggleCollapse"
-          ></svg-icon>
-        </span>
-        <span
-          class="dropdown-node-item-label"
-          :class="{ selected: node[this.selected], 'selected-highlight': selectedHighlight, disabled: getDisabled(node) }"
-        >{{getLabel(node)}}</span>
-        <span v-if="selectedMode==='icon'" class="dropdown-node-item-after">
-          <svg-icon
-            v-if="node[this.selected]"
-            :icon="selectedIcon"
-            color="#409eff"
-            class="dropdown-node-item-seleicon"
-          ></svg-icon>
-        </span>
-      </slot>
+      <span class="dropdown-node-item-pre">
+        <svg-icon
+          v-if="node[this.children] && node[this.children].length"
+          :icon="arrowRightIcon"
+          class="dropdown-node-item-arrowicon"
+          :class="{ collapse: node[this.collapse] }"
+          @click="toggleCollapse"
+        ></svg-icon>
+      </span>
+      <span
+        class="dropdown-node-item-label"
+        :class="{ selected: node[this.selected], 'selected-highlight': selectedHighlight, disabled: getDisabled(node) }"
+      >
+        <slot :node="node">
+          {{getLabel(node)}}
+        </slot>
+      </span>
+      <span v-if="selectedMode==='icon'" class="dropdown-node-item-after">
+        <svg-icon
+          v-if="node[this.selected]"
+          :icon="selectedIcon"
+          color="#409eff"
+          class="dropdown-node-item-seleicon"
+        ></svg-icon>
+      </span>
     </div>
     <div v-if="node[this.children] && node[this.children].length" class="dropdown-node-childs" ref="childsRef">
-      <node v-for="(item, index) in node[this.children]" :key="getLabel(item)+index" :node="item" :paddingLeft="paddingLeft+14" v-on="$listeners">
+      <node
+        v-for="(item, index) in node[this.children]"
+        :key="getLabel(item)+index"
+        :node="item"
+        :paddingLeft="paddingLeft+14"
+        :options="options"
+        :selectedMode="selectedMode"
+        :selectedIcon="selectedIcon"
+        :selectedHighlight="selectedHighlight"
+        :arrowRightIcon="arrowRightIcon"
+        v-on="$listeners"
+      >
         <template v-slot="scope">
           <slot :node="scope.node"></slot>
         </template>
@@ -36,8 +49,8 @@
 </template>
 
 <script>
-import store from '../dist/store.js'
 import svgIcon from './svgIcon.vue'
+import { selected, arrowRight } from '../dist/iconlist.js'
 
 export default {
   name: 'node',
@@ -50,14 +63,26 @@ export default {
     paddingLeft: {
       typeof: Number,
       default: 10
-    }
-  },
-  data () {
-    return {
-      selectedMode: store.getValue('selectedMode'),
-      selectedIcon: store.getValue('selectedIcon'),
-      selectedHighlight: store.getValue('selectedHighlight'),
-      arrowRightIcon: store.getValue('arrowRightIcon')
+    },
+    options: {
+      typeof: Object,
+      default: () => ({})
+    },
+    selectedMode: {
+      typeof: String,
+      default: 'icon'
+    },
+    selectedIcon: {
+      typeof: Object,
+      default: () => selected
+    },
+    selectedHighlight: {
+      typeof: Boolean,
+      default: true
+    },
+    arrowRightIcon: {
+      typeof: Object,
+      default: () => arrowRight
     }
   },
   computed: {
@@ -65,30 +90,25 @@ export default {
       return { 'padding-left': this.paddingLeft + 'px' }
     },
     selected () {
-      const options = store.getValue('options')
-      return options.selected || 'selected'
+      return this.options.selected || 'selected'
     },
     children () {
-      const options = store.getValue('options')
-      return options.children || 'children'
+      return this.options.children || 'children'
     },
     collapse () {
-      const options = store.getValue('options')
-      return options.collapse || 'collapse'
+      return this.options.collapse || 'collapse'
     }
   },
   methods: {
     getLabel (node) {
-      const options = store.getValue('options')
-      return typeof options.label === 'function'
-        ? options.label(node)
-        : options.label ? node[options.label] : node.label
+      return typeof this.options.label === 'function'
+        ? this.options.label(node)
+        : this.options.label ? node[this.options.label] : node.label
     },
     getDisabled (node) {
-      const options = store.getValue('options')
-      return typeof options.disabled === 'function'
-        ? options.disabled(node)
-        : options.disabled ? node[options.disabled] : node.disabled
+      return typeof this.options.disabled === 'function'
+        ? this.options.disabled(node)
+        : this.options.disabled ? node[this.options.disabled] : node.disabled
     },
     itemClick () {
       this.$emit('select', this.node)

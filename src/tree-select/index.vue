@@ -3,27 +3,21 @@
     <div
       class="tree-select-display"
       :class="displayClass"
-      @click.stop="toggle"
+      @click="toggle"
       @mouseenter.stop="showClearIcon = true"
       @mouseleave.stop="showClearIcon = false"
     >
-      <slot name="display" :displayValue="displayValue">
+      <slot name="display" :node="selectedNode" :focus="isFocus">
         <input
           ref="input"
-          v-if="displayMode==='input'"
           v-model="displayValue"
           class="tree-select-display-input"
           :placeholder="selfplaceholder"
           :disabled="disabled"
           :readonly="!canSearch"
-          @input="dataFilter"
+          @blur="inputFocus=false"
+          @input="search()"
         >
-        <span v-else class="tree-select-display-text">{{ displayValue || placeholder }}</span>
-        <svg-icon
-          class="tree-select-display-arrowicon"
-          :icon="arrowUpIcon"
-          :color="arrowFill"
-        ></svg-icon>
         <svg-icon
           v-if="displayValue && showClearIcon"
           class="tree-select-display-clearicon"
@@ -31,11 +25,17 @@
           color="#c0c4cc"
           @click="clear"
         ></svg-icon>
+        <svg-icon
+          v-else
+          class="tree-select-display-arrowicon"
+          :icon="arrowUpIcon"
+          color="#c0c4cc"
+        ></svg-icon>
       </slot>
     </div>
     <div class="tree-select-dropdown" :style="dropDownStyle" @click.stop>
       <div class="tree-select-dropdown-wrap" :style="dropWrapStyle">
-        <div>
+        <div class="tree-select-dropdown-header">
           <slot name="dropdownHeader"></slot>
         </div>
         <div class="tree-select-dropdown-area">
@@ -44,6 +44,8 @@
               v-for="(node, index) in filteredTreeData"
               :key="getLabel(node)+index"
               :node="node"
+              v-bind="$attrs"
+              :options="options"
               @select="select"
             >
               <template v-slot="scope">
@@ -53,7 +55,7 @@
           </div>
           <div v-else class="dropdown-nonode">暂无数据</div>
         </div>
-        <div>
+        <div class="tree-select-dropdown-footer">
           <slot name="dropdownFooter"></slot>
         </div>
       </div>
@@ -62,8 +64,7 @@
 </template>
 
 <script>
-import ICONLIST from '../dist/iconlist.js'
-import store from '../dist/store.js'
+import { close, arrowUp } from '../dist/iconlist.js'
 import deepCopy from '../dist/deepCopy.js'
 import node from './node.vue'
 import svgIcon from './svgIcon.vue'
@@ -106,10 +107,6 @@ export default {
       typeof: [String, Number],
       default: 220
     },
-    displayMode: {
-      typeof: String,
-      default: 'input'
-    },
     alignMode: {
       typeof: String,
       default: 'left'
@@ -117,18 +114,6 @@ export default {
     selectMode: {
       typeof: String,
       default: 'single'
-    },
-    selectedMode: {
-      typeof: String,
-      default: 'icon'
-    },
-    selectedIcon: {
-      typeof: Object,
-      default: () => ICONLIST.selected
-    },
-    selectedHighlight: {
-      typeof: Boolean,
-      default: true
     },
     preSelectFun: {
       typeof: Function,
@@ -148,15 +133,11 @@ export default {
     },
     clearIcon: {
       typeof: Object,
-      default: () => ICONLIST.close
+      default: () => close
     },
     arrowUpIcon: {
       typeof: Object,
-      default: () => ICONLIST.arrow_up
-    },
-    arrowRightIcon: {
-      typeof: Object,
-      default: () => ICONLIST.arrow_right
+      default: () => arrowUp
     }
   },
   data () {
@@ -164,21 +145,23 @@ export default {
       treeData: [],
       filteredTreeData: [],
       selectedNode: null,
+      preNode: null,
       displayValue: '',
       isSearch: false,
       isFocus: false,
+      inputFocus: false,
       showClearIcon: false,
       selfplaceholder: this.placeholder
     }
   },
   created () {
-    this.propsInit()
-    document.addEventListener('click', () => {
-      if (this.isFocus) {
+    document.addEventListener('click', (e) => {
+      if (this.isFocus && !e.path.includes(this.$el)) {
         this.isSearch = false
         this.isFocus = false
         this.displayValue = this.selfplaceholder
         this.selfplaceholder = this.placeholder
+        this.$emit('focus-change', this.isFocus)
       }
     })
   },
@@ -194,12 +177,10 @@ export default {
     },
     containerStyle () {
       const width = this.getStyleValue(this.width)
-      return this.displayMode === 'input' ? { width } : {}
+      return { width }
     },
     displayClass () {
       return {
-        'mode-text': this.displayMode === 'text',
-        'mode-input': this.displayMode === 'input',
         disabled: this.disabled !== false,
         focus: this.isFocus
       }
@@ -232,13 +213,6 @@ export default {
     }
   },
   methods: {
-    propsInit () {
-      store.setValue('options', this.options)
-      store.setValue('selectedMode', this.selectedMode)
-      store.setValue('selectedIcon', this.selectedIcon)
-      store.setValue('selectedHighlight', this.selectedHighlight)
-      store.setValue('arrowRightIcon', this.arrowRightIcon)
-    },
     dataFormat (data, parent, filter, flag) {
       const res = []
       let temp = flag
@@ -267,27 +241,34 @@ export default {
       }
       return res
     },
-    dataFilter () {
+    search (text) {
       this.isSearch = true
-      this.filteredTreeData = this.dataFormat(this.treeData, null, this.displayValue)
+      const filter = text || this.displayValue
+      this.filteredTreeData = this.dataFormat(this.treeData, null, filter)
     },
     toggle () {
       if (this.disabled) return
-      if (this.isFocus && this.$refs.input) {
+      if (this.isFocus) {
+        if (!this.inputFocus) {
+          this.inputFocus = true
+          return
+        }
         this.isSearch = false
-        this.isFocus = !this.isFocus
-        this.$refs.input.blur()
+        this.isFocus = false
+        this.$refs.input && this.$refs.input.blur()
         this.displayValue = this.selfplaceholder
         this.selfplaceholder = this.placeholder
-      } else if (!this.isFocus && this.$refs.input) {
+      } else {
         this.filteredTreeData = this.dataFormat(this.treeData)
-        this.isFocus = !this.isFocus
-        this.$refs.input.focus()
+        this.isFocus = true
+        this.inputFocus = true
         this.selfplaceholder = this.displayValue
         this.displayValue = ''
       }
+      this.$emit('focus-change', this.isFocus)
     },
     clear () {
+      if (this.disabled) return
       if (this.isSearch) {
         this.displayValue = this.selectedNode ? this.getLabel(this.selectedNode) : ''
         this.filteredTreeData = this.dataFormat(this.treeData)
@@ -333,15 +314,13 @@ export default {
       if (this.selectMode === 'multiple') {
         // todo
       } else {
-        console.log(node, 'index-handleSelect')
-        const preNode = store.getValue('preSelectedNode')
-        preNode && this.$set(preNode, this.selected, false)
+        this.preNode && this.$set(this.preNode, this.selected, false)
         this.$set(node, this.selected, true)
         this.selectedNode = node
         this.isSearch = false
         this.displayValue = this.getLabel(node)
         this.isFocus = false
-        store.setValue('preSelectedNode', node)
+        this.preNode = this.node
         this.$emit('select-change', node)
       }
     }
@@ -359,102 +338,77 @@ export default {
 .tree-select {
   position: relative;
   display: inline-block;
-  background-color: #fff;
   font-size: 14px;
   overflow: visible;
 
   &-display {
     position: relative;
-    display: flex;
-    align-items: center;
     height: 40px;
-    cursor: pointer;
+    width: 100%;
 
     &-arrowicon {
-      flex-shrink: 0;
-      width: 14px;
-      height: 14px;
-      margin-left: 10px;
-      transition: transform 0.2s linear;
-    }
-
-    &-clearicon {
-      width: 14px;
-      height: 14px;
       position: absolute;
+      width: 14px;
+      height: 14px;
       right: 15px;
-      background-color: #fff;
-    }
-
-    &.focus {
-      .tree-select-display-arrowicon {
-        transform: rotate(-180deg);
-      }
-    }
-  }
-
-  &-display.mode-input {
-    width: 100%;
-    justify-content: space-between;
-    padding: 0 15px;
-    border-radius: 4px;
-    border: 1px solid #dcdfe6;
-
-    .tree-select-display-input {
-      flex-grow: 1;
-      color: #606266;
-      height: 100%;
-      line-height: 1;
-      border: none;
-      outline: none;
-      background-color: #fff;
+      top: 50%;
+      transform: translateY(-50%);
+      transition: transform 0.2s linear;
       cursor: pointer;
     }
 
-    .tree-select-display-input::placeholder {
-      color: #c0c4cc;
+    &-clearicon {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+    }
+
+    &-input {
+      color: #606266;
+      width: 100%;
+      height: 100%;
+      line-height: 100%;
+      outline: none;
+      background-color: #fff;
+      padding: 0 15px;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      cursor: pointer;
+
+      &::placeholder {
+        color: #c0c4cc;
+      }
     }
 
     &:hover {
-      border-color: #c0c4cc;
+      .tree-select-display-input {
+        border-color: #409eff;
+      }
     }
 
     &.focus {
-      border-color: #409eff;
-    }
-  }
-
-  &-display.mode-input.disabled {
-    border-color: #e4e7ed;
-    background-color: #f5f7fa;
-    cursor: not-allowed;
-
-    &:hover {
-      border-color: #e4e7ed;
+      .tree-select-display-input {
+        border-color: #409eff;
+      }
+      .tree-select-display-arrowicon {
+        transform: translateY(-50%) rotate(-180deg);
+      }
     }
 
-    .tree-select-display-input {
-      color: #c0c4cc;
-      background-color: #f5f7fa;
-      cursor: not-allowed;
-    }
-  }
+    &.disabled {
+      .tree-select-display-input {
+        color: #c0c4cc;
+        background-color: #f5f7fa;
+        cursor: not-allowed;
+      }
 
-  &-display.mode-text {
-    justify-content: flex-start;
-    background-color: #fff;
-    border: none;
-
-    .tree-select-display-text {
-      color: #409eff;
-    }
-  }
-
-  &-display.mode-text.disabled {
-    cursor: not-allowed;
-
-    .tree-select-display-text {
-      color: #c0c4cc;
+      .tree-select-display-arrowicon {
+        cursor: not-allowed;
+      }
     }
   }
 
