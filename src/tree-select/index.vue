@@ -1,5 +1,9 @@
 <template>
-  <div class="tree-select" :class="size" :style="containerStyle">
+  <div
+    class="tree-select"
+    :class="size"
+    :style="containerStyle"
+  >
     <div
       class="tree-select-display"
       :class="displayClass"
@@ -7,7 +11,11 @@
       @mouseenter.stop="showClearIcon = true"
       @mouseleave.stop="showClearIcon = false"
     >
-      <slot name="display" :node="selectedNode" :focus="isFocus">
+      <slot
+        name="display"
+        :node="selectedNode"
+        :focus="isFocus"
+      >
         <input
           ref="input"
           v-model="displayValue"
@@ -16,7 +24,7 @@
           :disabled="disabled"
           :readonly="!canSearch"
           @blur="inputFocus=false"
-          @input="search()"
+          @input="search"
         >
         <svg-icon
           v-if="displayValue && showClearIcon"
@@ -24,39 +32,58 @@
           :icon="clearIcon"
           color="#c0c4cc"
           @click="clear"
-        ></svg-icon>
+        />
         <svg-icon
           v-else
           class="tree-select-display-arrowicon"
           :icon="arrowUpIcon"
           color="#c0c4cc"
-        ></svg-icon>
+        />
       </slot>
     </div>
-    <div class="tree-select-dropdown" :style="dropDownStyle" @click.stop>
-      <div class="tree-select-dropdown-wrap" :style="dropWrapStyle">
+    <div
+      class="tree-select-dropdown"
+      :style="dropDownStyle"
+      @click.stop
+    >
+      <div
+        class="tree-select-dropdown-wrap"
+        :style="dropWrapStyle"
+      >
         <div class="tree-select-dropdown-header">
-          <slot name="dropdownHeader"></slot>
+          <slot name="dropdownHeader" />
         </div>
         <div class="tree-select-dropdown-area">
-          <div v-if="filteredTreeData.length" class="dropdown-container" :class="dropconClass">
+          <div
+            v-if="treeDataLength"
+            class="dropdown-container"
+            :class="dropconClass"
+          >
             <node
-              v-for="(node, index) in filteredTreeData"
-              :key="getLabel(node)+index"
+              v-for="(node, index) in treeData"
+              :key="node[id]+''+index"
               :node="node"
               v-bind="$attrs"
               :options="options"
               @select="select"
             >
               <template v-slot="scope">
-                <slot name="dropdownItem" :node="scope.node"></slot>
+                <slot
+                  name="dropdownItem"
+                  :node="scope.node"
+                />
               </template>
             </node>
           </div>
-          <div v-else class="dropdown-nonode">暂无数据</div>
+          <div
+            v-else
+            class="dropdown-nonode"
+          >
+            暂无数据
+          </div>
         </div>
         <div class="tree-select-dropdown-footer">
-          <slot name="dropdownFooter"></slot>
+          <slot name="dropdownFooter" />
         </div>
       </div>
     </div>
@@ -143,7 +170,7 @@ export default {
   data () {
     return {
       treeData: [],
-      filteredTreeData: [],
+      // filteredTreeData: [],
       selectedNode: null,
       preNode: null,
       displayValue: '',
@@ -151,21 +178,15 @@ export default {
       isFocus: false,
       inputFocus: false,
       showClearIcon: false,
-      selfplaceholder: this.placeholder
+      selfplaceholder: this.placeholder,
+      symbolParent: Symbol.for('tree_select_parent'),
+      symbolHidden: Symbol.for('tree_select_hidden')
     }
   },
-  created () {
-    document.addEventListener('click', (e) => {
-      if (this.isFocus && !e.path.includes(this.$el)) {
-        this.isSearch = false
-        this.isFocus = false
-        this.displayValue = this.selfplaceholder
-        this.selfplaceholder = this.placeholder
-        this.$emit('focus-change', this.isFocus)
-      }
-    })
-  },
   computed: {
+    id () {
+      return this.options.id || 'id'
+    },
     children () {
       return this.options.children || 'children'
     },
@@ -176,7 +197,7 @@ export default {
       return this.options.selected || 'selected'
     },
     containerStyle () {
-      const width = this.getStyleValue(this.width)
+      let width = this.getStyleValue(this.width)
       return { width }
     },
     displayClass () {
@@ -189,20 +210,26 @@ export default {
       return this.disabled ? '#c0c4cc' : this.displayMode === 'input' ? '#c0c4cc' : '#409eff'
     },
     dropDownStyle () {
-      const width = this.getStyleValue(this.dropdownWidth)
-      const opacity = this.isFocus ? 1 : 0
-      const minWidth = this.displayMode === 'text' ? '220px' : '100%'
-      const maxWidth = this.getStyleValue(this.dropdownMaxWidth)
-      const maxHeight = this.getStyleValue(this.dropdownMaxHeight)
-      const transform = this.isFocus ? 'translateY(100%) scaleY(1)' : 'translateY(100%) scaleY(0)'
-      const style = { width, opacity, transform, 'max-width': maxWidth, 'max-height': maxHeight, 'min-width': minWidth }
-      this.alignMode === 'right' && (style.right = '0')
-      this.alignMode === 'center' && (style.transform += ' translateX(-50%)')
+      let width = this.getStyleValue(this.dropdownWidth)
+      let opacity = this.isFocus ? 1 : 0
+      let minWidth = this.displayMode === 'text' ? '220px' : '100%'
+      let maxWidth = this.getStyleValue(this.dropdownMaxWidth)
+      let maxHeight = this.getStyleValue(this.dropdownMaxHeight)
+      let transform = this.isFocus ? 'translateY(100%) scaleY(1)' : 'translateY(100%) scaleY(0)'
+      let style = { width, opacity, transform, 'max-width': maxWidth, 'max-height': maxHeight, 'min-width': minWidth }
+      if (this.alignMode === 'right') {
+        style.right = '0'
+      } else if (this.alignMode === 'center') {
+        style.left = '50%'
+        style.transform += ' translateX(-50%)'
+      } else {
+        style.left = '0'
+      }
       return style
     },
     dropWrapStyle () {
-      const maxHeight = this.getStyleValue(this.dropdownMaxHeight)
-      const style = { 'max-height': maxHeight }
+      let maxHeight = this.getStyleValue(this.dropdownMaxHeight)
+      let style = { 'max-height': maxHeight }
       return style
     },
     dropconClass () {
@@ -210,41 +237,66 @@ export default {
         rest: this.coverMode === 'rest',
         scroll: this.coverMode === 'scroll'
       }
+    },
+    treeDataLength () {
+      return this.treeData.filter(item => !item[this.symbolHidden]).length
     }
   },
+  watch: {
+    data (n) {
+      n.length && (this.treeData = this.dataFormat(deepCopy(n)))
+    }
+  },
+  created () {
+    // 如果 data 一开始传进来时就是非空数组的情况
+    if (this.data.length) {
+      this.treeData = this.dataFormat(deepCopy(this.data))
+      // this.filteredTreeData = this.dataFormat(this.treeData)
+    }
+
+    document.addEventListener('click', (e) => {
+      if (this.isFocus && !e.path.includes(this.$el)) {
+        this.isSearch = false
+        this.isFocus = false
+        this.displayValue = this.selfplaceholder
+        this.selfplaceholder = this.placeholder
+        this.$emit('focus-change', this.isFocus)
+      }
+    })
+  },
   methods: {
-    dataFormat (data, parent, filter, flag) {
-      const res = []
+    dataFormat (data, parent) {
+      for (let item of data) {
+        item[this.symbolParent] = parent ? parent : null
+        item[this.children] && item[this.children].length && this.dataFormat(item[this.children], item)
+      }
+      return data
+    },
+    dataFilter (data, filter, flag) {
       let temp = flag
-      for (const item of data) {
-        const obj = { ...item }
-        const label = this.getLabel(obj)
-        obj._parent = parent || null
-        if (item[this.selected]) {
-          this.selectedNode = obj
-          this.displayValue = label
-          item[this.selected] = false
-        }
-        if (this.selectedNode && label === this.getLabel(this.selectedNode)) {
-          obj[this.selected] = true
-        }
+      for (let item of data) {
+        let label = this.getLabel(item)
+        let filterChilds = []
         if (filter && label.toLowerCase().includes(filter.toLowerCase())) {
           temp = true
+        } else {
+          temp = false
         }
-        if (obj[this.children] && obj[this.children].length) {
-          obj[this.children] = this.dataFormat(obj[this.children], obj, filter, temp)
+        if (item[this.children] && item[this.children].length) {
+          filterChilds = this.dataFilter(item[this.children], filter, temp).filter(childItem => !childItem[this.symbolHidden])
         }
-        if (!filter || temp || (obj[this.children] && obj[this.children].length)) {
-          res.push(obj)
+        if (!filter || temp || filterChilds.length) {
+          item[this.symbolHidden] = false
+        } else {
+          item[this.symbolHidden] = true
         }
         temp = flag
       }
-      return res
+      return data
     },
-    search (text) {
+    search () {
       this.isSearch = true
-      const filter = text || this.displayValue
-      this.filteredTreeData = this.dataFormat(this.treeData, null, filter)
+      this.treeData = this.dataFilter(this.treeData, this.displayValue)
     },
     toggle () {
       if (this.disabled) return
@@ -259,7 +311,7 @@ export default {
         this.displayValue = this.selfplaceholder
         this.selfplaceholder = this.placeholder
       } else {
-        this.filteredTreeData = this.dataFormat(this.treeData)
+        this.treeData = this.dataFilter(this.treeData)
         this.isFocus = true
         this.inputFocus = true
         this.selfplaceholder = this.displayValue
@@ -271,7 +323,7 @@ export default {
       if (this.disabled) return
       if (this.isSearch) {
         this.displayValue = this.selectedNode ? this.getLabel(this.selectedNode) : ''
-        this.filteredTreeData = this.dataFormat(this.treeData)
+        this.treeData = this.dataFilter(this.treeData)
       } else {
         this.$set(this.selectedNode, this.selected, false)
         this.selectedNode = null
@@ -298,7 +350,7 @@ export default {
         return
       }
       if (this.preSelectFun && typeof this.preSelectFun === 'function') {
-        const res = this.preSelectFun()
+        let res = this.preSelectFun()
         if (res && res.then) {
           res.then(() => {
             this.handleSelect(node)
@@ -320,15 +372,9 @@ export default {
         this.isSearch = false
         this.displayValue = this.getLabel(node)
         this.isFocus = false
-        this.preNode = this.node
+        this.preNode = node
         this.$emit('select-change', node)
       }
-    }
-  },
-  watch: {
-    data (n) {
-      this.treeData = deepCopy(n)
-      this.filteredTreeData = this.dataFormat(this.treeData)
     }
   }
 }
@@ -343,7 +389,6 @@ export default {
 
   &-display {
     position: relative;
-    height: 40px;
     width: 100%;
 
     &-arrowicon {
@@ -370,7 +415,7 @@ export default {
     &-input {
       color: #606266;
       width: 100%;
-      height: 100%;
+      height: 40px;
       line-height: 100%;
       outline: none;
       background-color: #fff;
@@ -489,6 +534,8 @@ export default {
       }
 
       &-label {
+        height: 18px;
+        line-height: 18px;
         flex-grow: 1;
       }
 
@@ -537,7 +584,9 @@ export default {
   font-size: 12px;
 
   .tree-select-display {
-    height: 32px;
+    &-input {
+      height: 32px;
+    }
 
     &-arrowicon, &-clearicon {
       width: 12px;
@@ -547,6 +596,7 @@ export default {
 
   & /deep/ .dropdown-node {
     &-item {
+
       &-pre, &-after {
         width: 12px;
         height: 12px;

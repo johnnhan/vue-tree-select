@@ -1,47 +1,62 @@
 <template>
-  <div class="dropdown-node">
-    <div class="dropdown-node-item" :style="itemStyle" @click.stop="itemClick">
+  <div
+    v-show="!node[symbolHidden]"
+    class="dropdown-node"
+  >
+    <div
+      class="dropdown-node-item"
+      :style="itemStyle"
+      @click.stop="itemClick"
+    >
       <span class="dropdown-node-item-pre">
         <svg-icon
-          v-if="node[this.children] && node[this.children].length"
+          v-if="node[children] && node[children].length"
           :icon="arrowRightIcon"
           class="dropdown-node-item-arrowicon"
-          :class="{ collapse: node[this.collapse] }"
+          :class="{ collapse: node[collapse] }"
           @click="toggleCollapse"
-        ></svg-icon>
+        />
       </span>
       <span
         class="dropdown-node-item-label"
-        :class="{ selected: node[this.selected], 'selected-highlight': selectedHighlight, disabled: getDisabled(node) }"
+        :class="{ selected: node[selected], 'selected-highlight': selectedHighlight, disabled: getDisabled(node) }"
       >
         <slot :node="node">
-          {{getLabel(node)}}
+          {{ getLabel(node) }}
         </slot>
       </span>
-      <span v-if="selectedMode==='icon'" class="dropdown-node-item-after">
+      <span
+        v-if="selectedMode==='icon'"
+        class="dropdown-node-item-after"
+      >
         <svg-icon
-          v-if="node[this.selected]"
+          v-if="node[selected]"
           :icon="selectedIcon"
           color="#409eff"
           class="dropdown-node-item-seleicon"
-        ></svg-icon>
+        />
       </span>
     </div>
-    <div v-if="node[this.children] && node[this.children].length" class="dropdown-node-childs" ref="childsRef">
+    <div
+      v-if="node[children] && node[children].length"
+      v-show="!node[collapse]"
+      ref="childsRef"
+      class="dropdown-node-childs"
+    >
       <node
-        v-for="(item, index) in node[this.children]"
-        :key="getLabel(item)+index"
+        v-for="(item, index) in node[children]"
+        :key="item[id]+''+index"
         :node="item"
-        :paddingLeft="paddingLeft+14"
+        :padding-left="paddingLeft+14"
         :options="options"
-        :selectedMode="selectedMode"
-        :selectedIcon="selectedIcon"
-        :selectedHighlight="selectedHighlight"
-        :arrowRightIcon="arrowRightIcon"
+        :selected-mode="selectedMode"
+        :selected-icon="selectedIcon"
+        :selected-highlight="selectedHighlight"
+        :arrow-right-icon="arrowRightIcon"
         v-on="$listeners"
       >
         <template v-slot="scope">
-          <slot :node="scope.node"></slot>
+          <slot :node="scope.node" />
         </template>
       </node>
     </div>
@@ -53,7 +68,7 @@ import svgIcon from './svgIcon.vue'
 import { selected, arrowRight } from '../dist/iconlist.js'
 
 export default {
-  name: 'node',
+  name: 'Node',
   components: { svgIcon },
   props: {
     node: {
@@ -85,9 +100,17 @@ export default {
       default: () => arrowRight
     }
   },
+  data () {
+    return {
+      symbolHidden: Symbol.for('tree_select_hidden')
+    }
+  },
   computed: {
     itemStyle () {
       return { 'padding-left': this.paddingLeft + 'px' }
+    },
+    id () {
+      return this.options.id || 'id'
     },
     selected () {
       return this.options.selected || 'selected'
@@ -115,7 +138,6 @@ export default {
     },
     toggleCollapse () {
       this.$set(this.node, this.collapse, !this.node[this.collapse])
-      this.$refs.childsRef.style.display = this.node[this.collapse] ? 'none' : 'block'
     }
   }
 }
