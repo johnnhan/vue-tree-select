@@ -10,13 +10,8 @@
 </template>
 
 <script>
-import TreeSelect from './tree-select/index.vue'
-
 export default {
   name: 'App',
-  components: {
-    TreeSelect
-  },
   data () {
     return {
       data: [

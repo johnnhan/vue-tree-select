@@ -1,6 +1,6 @@
 <template>
   <div
-    v-show="!node[symbolHidden]"
+    v-show="!node[$symbolHidden]"
     class="dropdown-node"
   >
     <div
@@ -9,7 +9,7 @@
       @click.stop="itemClick"
     >
       <span class="dropdown-node-item-pre">
-        <svg-icon
+        <tree-select-svg-icon
           v-if="node[children] && node[children].length"
           :icon="arrowRightIcon"
           class="dropdown-node-item-arrowicon"
@@ -29,7 +29,7 @@
         v-if="selectedMode==='icon'"
         class="dropdown-node-item-after"
       >
-        <svg-icon
+        <tree-select-svg-icon
           v-if="node[selected]"
           :icon="selectedIcon"
           color="#409eff"
@@ -64,45 +64,38 @@
 </template>
 
 <script>
-import svgIcon from './svgIcon.vue'
 import { selected, arrowRight } from '../dist/iconlist.js'
 
 export default {
   name: 'Node',
-  components: { svgIcon },
   props: {
     node: {
-      typeof: Object,
+      type: Object,
       default: () => ({})
     },
     paddingLeft: {
-      typeof: Number,
+      type: Number,
       default: 10
     },
     options: {
-      typeof: Object,
+      type: Object,
       default: () => ({})
     },
     selectedMode: {
-      typeof: String,
+      type: String,
       default: 'icon'
     },
     selectedIcon: {
-      typeof: Object,
+      type: Object,
       default: () => selected
     },
     selectedHighlight: {
-      typeof: Boolean,
+      type: Boolean,
       default: true
     },
     arrowRightIcon: {
-      typeof: Object,
+      type: Object,
       default: () => arrowRight
-    }
-  },
-  data () {
-    return {
-      symbolHidden: Symbol.for('tree_select_hidden')
     }
   },
   computed: {

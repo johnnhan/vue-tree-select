@@ -26,14 +26,14 @@
           @blur="inputFocus=false"
           @input="search"
         >
-        <svg-icon
+        <tree-select-svg-icon
           v-if="displayValue && showClearIcon"
           class="tree-select-display-clearicon"
           :icon="clearIcon"
           color="#c0c4cc"
           @click="clear"
         />
-        <svg-icon
+        <tree-select-svg-icon
           v-else
           class="tree-select-display-arrowicon"
           :icon="arrowUpIcon"
@@ -97,80 +97,76 @@ import node from './node.vue'
 import svgIcon from './svgIcon.vue'
 
 export default {
-  components: {
-    node,
-    svgIcon
-  },
+  components: { node },
   props: {
     data: {
-      typeof: Array,
+      type: Array,
       default: () => []
     },
     options: {
-      typeof: Object,
+      type: Object,
       default: () => ({})
     },
     size: {
-      typeof: String,
+      type: String,
       default: 'medium'
     },
     disabled: {
-      typeof: Boolean,
+      type: Boolean,
       default: false
     },
     width: {
-      typeof: [String, Number],
+      type: [String, Number],
       default: 220
     },
     dropdownWidth: {
-      typeof: [String, Number],
+      type: [String, Number],
       default: 'auto'
     },
     dropdownMaxWidth: {
-      typeof: [String, Number],
+      type: [String, Number],
       default: 440
     },
     dropdownMaxHeight: {
-      typeof: [String, Number],
+      type: [String, Number],
       default: 220
     },
     alignMode: {
-      typeof: String,
+      type: String,
       default: 'left'
     },
     selectMode: {
-      typeof: String,
+      type: String,
       default: 'single'
     },
     preSelectFun: {
-      typeof: Function,
+      type: Function,
       default: () => () => {}
     },
     canSearch: {
-      typeof: Boolean,
+      type: Boolean,
       default: true
     },
     coverMode: {
-      typeof: String,
+      type: String,
       default: 'scroll'
     },
     placeholder: {
-      typeof: String,
+      type: String,
       default: '请选择'
     },
     clearIcon: {
-      typeof: Object,
+      type: Object,
       default: () => close
     },
     arrowUpIcon: {
-      typeof: Object,
+      type: Object,
       default: () => arrowUp
     }
   },
   data () {
     return {
       treeData: [],
-      // filteredTreeData: [],
       selectedNode: null,
       preNode: null,
       displayValue: '',
@@ -178,9 +174,7 @@ export default {
       isFocus: false,
       inputFocus: false,
       showClearIcon: false,
-      selfplaceholder: this.placeholder,
-      symbolParent: Symbol.for('tree_select_parent'),
-      symbolHidden: Symbol.for('tree_select_hidden')
+      selfplaceholder: this.placeholder
     }
   },
   computed: {
@@ -239,7 +233,7 @@ export default {
       }
     },
     treeDataLength () {
-      return this.treeData.filter(item => !item[this.symbolHidden]).length
+      return this.treeData.filter(item => !item[this.$symbolHidden]).length
     }
   },
   watch: {
@@ -267,7 +261,7 @@ export default {
   methods: {
     dataFormat (data, parent) {
       for (let item of data) {
-        item[this.symbolParent] = parent ? parent : null
+        item[this.$symbolParent] = parent ? parent : null
         item[this.children] && item[this.children].length && this.dataFormat(item[this.children], item)
       }
       return data
@@ -283,12 +277,12 @@ export default {
           temp = false
         }
         if (item[this.children] && item[this.children].length) {
-          filterChilds = this.dataFilter(item[this.children], filter, temp).filter(childItem => !childItem[this.symbolHidden])
+          filterChilds = this.dataFilter(item[this.children], filter, temp).filter(childItem => !childItem[this.$symbolHidden])
         }
         if (!filter || temp || filterChilds.length) {
-          item[this.symbolHidden] = false
+          item[this.$symbolHidden] = false
         } else {
-          item[this.symbolHidden] = true
+          item[this.$symbolHidden] = true
         }
         temp = flag
       }
