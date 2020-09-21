@@ -94,7 +94,6 @@
 import { close, arrowUp } from '../dist/iconlist.js'
 import deepCopy from '../dist/deepCopy.js'
 import node from './node.vue'
-import svgIcon from './svgIcon.vue'
 
 export default {
   components: { node },
